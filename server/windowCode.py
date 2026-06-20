@@ -7,18 +7,25 @@
 # https://www.youtube.com/watch?v=vY_9LKxQL_0
 # don't forget pip install pygame
 # and uh, run the code in Powershell (actually idk how Isabel does it directly from VSCode)
+# to run any files, make sure you're in the root directory and then
+# py server.windowCode (for windowCode.py inside the server directory)
+# py client.testing (for testing.py inside the client directory)
+# You get the general gist of it, right?
+# Also why does vsc still say "import pygame could not be resolved"
+# Brah I should visit Isabel's apartment to work on this together
 
 import pygame
 from sys import exit
-
-WINDOW_WIDTH = 768
-WINDOW_HEIGHT = 512
-TILE_SIZE = 32
-
-CHAT_TILE_WIDTH = 8
-CHAT_TILE_HEIGHT = 16
-MAZE_TILE_WIDTH = 16
-MAZE_TILE_HEIGHT = 16
+from shared.constants import(
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT,
+    TILE_SIZE,
+    CHAT_TILE_WIDTH,
+    CHAT_TILE_HEIGHT,
+    MAZE_TILE_WIDTH,
+    MAZE_TILE_HEIGHT,
+    FPS
+)
 
 window = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 pygame.display.set_caption("Psychic Maze")
