@@ -17,8 +17,8 @@
 import pygame
 from sys import exit
 from shared.constants import(
-    WINDOW_WIDTH,
-    WINDOW_HEIGHT,
+    GAME_WIDTH,
+    GAME_HEIGHT,
     TILE_SIZE,
     CHAT_TILE_WIDTH,
     CHAT_TILE_HEIGHT,
@@ -27,9 +27,51 @@ from shared.constants import(
     FPS
 )
 
-window = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
+# I need to do integer scaling
+
+pygame.init()
+
+display_info = pygame.display.Info()
+
+scale = max(1,min
+    (
+        display_info.current_w // GAME_WIDTH,
+        display_info.current_h // GAME_HEIGHT
+    )
+)
+
+window_width = GAME_WIDTH * scale
+window_height = GAME_HEIGHT * scale
+
+window = pygame.display.set_mode((window_width,window_height))
+game_surface = pygame.Surface((GAME_WIDTH,GAME_HEIGHT))
+
 pygame.display.set_caption("Psychic Maze")
 clock = pygame.time.Clock()
+
+green_explorer = pygame.image.load(
+    "assets/sprites/explorer/green_explorer/idle_1.png"
+).convert_alpha()
+
+red_explorer = pygame.image.load(
+    "assets/sprites/explorer/red_explorer/idle_1.png"
+).convert_alpha()
+
+orange_explorer = pygame.image.load(
+    "assets/sprites/explorer/orange_explorer/idle_1.png"
+).convert_alpha()
+
+blue_explorer = pygame.image.load(
+    "assets/sprites/explorer/blue_explorer/idle_1.png"
+).convert_alpha()
+
+spiritualist = pygame.image.load(
+    "assets/sprites/spiritualist/idle_1.png"
+)
+
+ghost = pygame.image.load(
+    "assets/sprites/ghost/idle_1.png"
+)
 
 while True:
     for event in pygame.event.get():
@@ -37,5 +79,20 @@ while True:
             pygame.quit()
             exit()
     
-    pygame.display.update()
+    game_surface.fill((0,0,0))
+    game_surface.blit(green_explorer, (256,160))
+    game_surface.blit(red_explorer, (288,160))
+    game_surface.blit(orange_explorer, (320,160))
+    game_surface.blit(blue_explorer, (352,160))
+    game_surface.blit(spiritualist, (384,160))
+    game_surface.blit(ghost, (416,160))
+    
+    scaled_surface = pygame.transform.scale(
+        game_surface,
+        (window_width,window_height)
+    )
+    
+    window.blit(scaled_surface, (0,0))
+    pygame.display.flip()
+    
     clock.tick(FPS) # 60FPS
