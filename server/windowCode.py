@@ -33,22 +33,9 @@ from shared.constants import(
 
 pygame.init()
 
-display_info = pygame.display.Info()
-
-scale = max(1,min
-    (
-        display_info.current_w // GAME_WIDTH,
-        display_info.current_h // GAME_HEIGHT
-    )
-)
-
-window_width = GAME_WIDTH * scale
-window_height = GAME_HEIGHT * scale
-
-window = pygame.display.set_mode((window_width,window_height))
-game_surface = pygame.Surface((GAME_WIDTH,GAME_HEIGHT))
-
+window = pygame.display.set_mode((GAME_WIDTH,GAME_HEIGHT))
 pygame.display.set_caption("Psychic Maze")
+
 clock = pygame.time.Clock()
 
 green_explorer = pygame.image.load(
@@ -75,26 +62,34 @@ ghost = pygame.image.load(
     "assets/sprites/ghost/idle_1.png"
 )
 
+exitTile = pygame.image.load(
+    "assets/tiles/exit.png"
+)
+
+floor = pygame.image.load(
+    "assets/tiles/black_floor.png"
+)
+
+wall = pygame.image.load(
+    "assets/tiles/purple_wall.png"
+)
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
     
-    game_surface.fill((0,0,0))
-    game_surface.blit(green_explorer, (256,160))
-    game_surface.blit(red_explorer, (288,160))
-    game_surface.blit(orange_explorer, (320,160))
-    game_surface.blit(blue_explorer, (352,160))
-    game_surface.blit(spiritualist, (384,160))
-    game_surface.blit(ghost, (416,160))
-    
-    scaled_surface = pygame.transform.scale(
-        game_surface,
-        (window_width,window_height)
-    )
-    
-    window.blit(scaled_surface, (0,0))
+    window.fill((0,0,0))
+    window.blit(green_explorer, (256,160))
+    window.blit(red_explorer, (288,160))
+    window.blit(orange_explorer, (320,160))
+    window.blit(blue_explorer, (352,160))
+    window.blit(spiritualist, (384,160))
+    window.blit(ghost, (416,160))
+    window.blit(exitTile, (448,160))
+    window.blit(floor, (480, 160))
+    window.blit(wall, (512,160))
+
     pygame.display.flip()
-    
     clock.tick(FPS) # 60FPS
