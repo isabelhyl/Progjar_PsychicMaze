@@ -398,6 +398,7 @@ class MazeScene(Scene):
         if msg_type == protocol.CHAT_MESSAGE:
             msg = f"{data['sender']}: {data['text']}"
             self.app.session.chat_messages.append(msg)
+            self.chat_panel.scroll_to_bottom()
             return
         
         elif msg_type == protocol.CHAT_HISTORY:
@@ -407,6 +408,7 @@ class MazeScene(Scene):
                 self.app.session.chat_messages.append(
                     f"{msg['sender']}: {msg['text']}"
                 )
+            self.chat_panel.scroll_to_bottom()
 
         elif msg_type == protocol.GAME_STATE:
             self._apply_game_state(data)

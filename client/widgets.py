@@ -1,7 +1,3 @@
-# UI building blocks shared across every scene
-# Nothing here knows about the network or game state 
-# widgets just draw themselves and report interaction (click, text changes) back to whoever owns them.
-
 import pygame
 
 
@@ -339,12 +335,34 @@ class ChatPanel:
             font
         )
 
+    def _message_width(self):
+        """The width available for rendering one line of chat text.
+
+        This MUST be the single source of truth for message wrapping --
+        draw() uses it to lay out text, and the scroll-position
+        calculations (add_message / scroll_to_bottom / MOUSEWHEEL
+        handling) use it to predict how tall that same text will be.
+
+        Previously, draw() narrowed this to leave room for the close
+        button (self.close_button.rect.left - self.rect.x - 20), while
+        add_message()/scroll_to_bottom() used a wider self.rect.width -
+        20 that ignored the close button entirely. That mismatch meant
+        the scroll math always under-estimated how many lines a message
+        would actually wrap to once drawn, so scrolling "to the bottom"
+        landed a bit short of the real bottom -- the most recent 1-2
+        messages would end up rendered just past the visible/clipped
+        area, underneath the input box. Computing it once here and
+        reusing it everywhere keeps the two calculations from ever
+        drifting apart again.
+        """
+        return self.close_button.rect.left - self.rect.x - 20
+
     def add_message(self, text):
         self.messages.append(text)
         # total_height = len(self.messages) * 24
 
         total_height = 0
-        message_width = self.rect.width - 20
+        message_width = self._message_width()
         for msg in self.messages:
             wrapped_lines = self.wrap_text(
                 msg,
@@ -352,7 +370,8 @@ class ChatPanel:
             )
             total_height += len(wrapped_lines) * 24 + 5
 
-        visible_height = self.rect.height - 70
+        # visible_height = self.rect.height - 70
+        visible_height = self.input_box.rect.top - self.rect.y - 10
         max_scroll = max(0, total_height - visible_height)
         self.scroll_offset = -max_scroll
 
@@ -385,7 +404,7 @@ class ChatPanel:
             # total_height = len(self.messages) * 24
 
             total_height = 0
-            message_width = self.rect.width - 20
+            message_width = self._message_width()
             for msg in self.messages:
                 wrapped_lines = self.wrap_text(
                     msg,
@@ -393,7 +412,7 @@ class ChatPanel:
                 )
                 total_height += len(wrapped_lines) * 24 + 5
 
-            visible_height = self.rect.height - 70
+            visible_height = self.input_box.rect.top - self.rect.y - 10
             max_scroll = max(0, total_height - visible_height)
             self.scroll_offset = max(
                 -max_scroll,
@@ -466,7 +485,7 @@ class ChatPanel:
 
         surface.set_clip(message_clip)
                 
-        message_width = self.close_button.rect.left - self.rect.x - 20
+        message_width = self._message_width()
 
         # for msg in self.messages:
         #     wrapped_lines = self.wrap_text(
@@ -589,3 +608,24 @@ class ChatPanel:
         if current_line:
             lines.append(current_line)
         return lines
+
+    def scroll_to_bottom(self):
+        total_height = 0
+        message_width = self._message_width()
+
+        for msg in self.messages:
+            wrapped_lines = self.wrap_text(
+                msg,
+                message_width
+            )
+            total_height += len(wrapped_lines) * 24 + 5
+
+        visible_height = self.input_box.rect.top - self.rect.y - 10
+
+        max_scroll = max(
+            0,
+            total_height - visible_height
+        )
+
+        self.scroll_offset = -max_scroll
+

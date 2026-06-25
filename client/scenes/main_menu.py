@@ -9,14 +9,22 @@ from client.widgets import Button, COLOR_BG, COLOR_TEXT, COLOR_MUTED
 class MainMenuScene(Scene):
     def on_enter(self, **kwargs):
         font = self.app.fonts["normal"]
+        
+        # btn_w, btn_h = 180, 50
+        # gap = 30
+        # total_w = btn_w * 2 + gap
+        # start_x = WINDOW_WIDTH // 2 - total_w // 2
+        
         btn_w, btn_h = 180, 50
         gap = 30
-        total_w = btn_w * 2 + gap
+        total_w = btn_w * 3 + gap * 2
         start_x = WINDOW_WIDTH // 2 - total_w // 2
+
         y = WINDOW_HEIGHT // 2
 
         self.create_button = Button((start_x, y, btn_w, btn_h), "Create Game", font, variant="primary")
         self.join_button = Button((start_x + btn_w + gap, y, btn_w, btn_h), "Join Game", font)
+        self.quit_button = Button((start_x + (btn_w + gap) * 2, y, btn_w, btn_h), "Quit", font, variant="danger")
 
         self.status_message = ""
 
@@ -27,6 +35,10 @@ class MainMenuScene(Scene):
 
         if self.join_button.handle_event(event):
             self.app.set_scene("lobby_list")
+
+        if self.quit_button.handle_event(event):
+            pygame.quit()
+            raise SystemExit
 
     def handle_message(self, msg_type, data):
         if msg_type == protocol.ERROR:
@@ -46,6 +58,7 @@ class MainMenuScene(Scene):
 
         self.create_button.draw(surface)
         self.join_button.draw(surface)
+        self.quit_button.draw(surface)
 
         if self.status_message:
             status_surf = font_small.render(self.status_message, True, COLOR_MUTED)
