@@ -40,6 +40,16 @@ from shared.constants import (
 )
 from client.scenes.base import Scene
 
+from client.widgets import (
+    Button,
+    ChatPanel,
+    COLOR_BG,
+    COLOR_TEXT,
+    COLOR_MUTED,
+    COLOR_PANEL,
+    COLOR_BORDER
+)
+
 # explorer colour variants assigned in join order
 EXPLORER_VARIANTS = ["blue_explorer", "red_explorer", "green_explorer", "orange_explorer"]
 
@@ -187,7 +197,12 @@ class MazeScene(Scene):
       
         pixel_w = self.tile_size * MAZE_TILE_WIDTH
         pixel_h = self.tile_size * MAZE_TILE_HEIGHT
-        self.offset_x = (WINDOW_WIDTH - pixel_w) // 2
+        # self.offset_x = (WINDOW_WIDTH - pixel_w) // 2
+
+        GAME_AREA_WIDTH = WINDOW_WIDTH * 3 // 4
+        self.offset_x = (
+            GAME_AREA_WIDTH - pixel_w
+        ) // 2
         self.offset_y = (WINDOW_HEIGHT - pixel_h) // 2
 
       
@@ -226,6 +241,30 @@ class MazeScene(Scene):
 
         self._game_over = False
 
+        # chat feature
+        self.chat_open = False
+        self.chat_button = Button(
+            (
+                WINDOW_WIDTH - 120,
+                20,
+                100,
+                40
+            ),
+            "Chat",
+            self.app.fonts["small"]
+        )
+
+        CHAT_WIDTH = WINDOW_WIDTH // 4
+        self.chat_panel = ChatPanel(
+            (
+                WINDOW_WIDTH - CHAT_WIDTH,
+                0,
+                CHAT_WIDTH,
+                WINDOW_HEIGHT
+            ),
+            self.app.fonts["chat"],
+            self.app.session.chat_messages
+        )
   
     def _bake_maze_surface(self, w, h):
         surf = pygame.Surface((w, h))
@@ -324,6 +363,21 @@ class MazeScene(Scene):
 
 
     def handle_event(self, event):
+        if self.chat_button.handle_event(event):
+            self.chat_open = not self.chat_open
+
+        if self.chat_open:
+            action, payload = self.chat_panel.handle_event(event)
+            if action == "close":
+                self.chat_open = False
+            elif action == "send":
+                self.app.network.send(
+                    protocol.CHAT_MESSAGE,
+                    {
+                        "text": payload
+                    }
+                )
+
         # Popup: any key / click dismisses it
         if self.popup:
             if event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
@@ -341,7 +395,20 @@ class MazeScene(Scene):
                 self._keys_held[event.key] = False
 
     def handle_message(self, msg_type, data):
-        if msg_type == protocol.GAME_STATE:
+        if msg_type == protocol.CHAT_MESSAGE:
+            msg = f"{data['sender']}: {data['text']}"
+            self.app.session.chat_messages.append(msg)
+            return
+        
+        elif msg_type == protocol.CHAT_HISTORY:
+            self.app.session.chat_messages.clear()
+            for msg in data.get("messages", []):
+
+                self.app.session.chat_messages.append(
+                    f"{msg['sender']}: {msg['text']}"
+                )
+
+        elif msg_type == protocol.GAME_STATE:
             self._apply_game_state(data)
 
         elif msg_type == protocol.PLAYER_DIED:
@@ -505,6 +572,11 @@ class MazeScene(Scene):
 
             self._draw_entity(surface, p.sheet, p.x, p.y)
             self._draw_name_tag(surface, p.name, p.x, p.y)
+
+        # draw chat panel
+        self.chat_button.draw(surface)
+        if self.chat_open:
+            self.chat_panel.draw(surface)
 
         
         if role in ("spiritualist", "spectator"):

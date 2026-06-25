@@ -147,6 +147,12 @@ class Server:
             num_ghosts=data.get("num_ghosts"),
         )
         client.send(protocol.LOBBY_STATE, lobby.to_public_dict())
+        client.send(
+            protocol.CHAT_HISTORY,
+            {
+                "messages": []
+            }
+        )
 
     def handle_join_game(self, client, data):
         player = self._require_player(client)
@@ -157,6 +163,12 @@ class Server:
             return
         lobby.add_player(player)
         self.broadcast_lobby_state(lobby.lobby_id)
+        client.send(
+            protocol.CHAT_HISTORY,
+            {
+                "messages": lobby.chat_messages
+            }
+        )
 
     def handle_set_options(self, client, data):
         player = self._require_player(client)
@@ -305,6 +317,22 @@ class Server:
             return
         self.broadcast_to_lobby(lobby_id, protocol.LOBBY_STATE, lobby.to_public_dict())
 
+    def handle_chat_message(self, client, data):
+        player = self._require_player(client)
+        lobby = self._require_lobby(player)
+
+        msg = {
+            "sender": player.name,
+            "text": data.get("text", "")
+        }
+
+        lobby.chat_messages.append(msg)
+
+        self.broadcast_to_lobby(
+            lobby.lobby_id,
+            protocol.CHAT_MESSAGE,
+            msg
+        )
 
 if __name__ == "__main__":
     Server().start()

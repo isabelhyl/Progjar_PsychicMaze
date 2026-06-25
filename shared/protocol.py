@@ -70,6 +70,9 @@ PLAYER_DIED = "PLAYER_DIED"
 PLAYER_ESCAPED = "PLAYER_ESCAPED"
 GAME_OVER = "GAME_OVER"
 
+CHAT_MESSAGE = "CHAT_MESSAGE"
+CHAT_HISTORY = "CHAT_HISTORY"
+
 
 def make_message(msg_type, data=None):
     """Builds a message dict ready for json.dumps."""

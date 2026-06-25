@@ -19,6 +19,9 @@ class Session:
 
         self.error_message = None  # last ERROR message text, shown by whichever scene is active
 
+        # chat
+        self.chat_messages = []
+
     def is_host(self):
         if not self.lobby_state or not self.player_id:
             return False

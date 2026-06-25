@@ -50,6 +50,11 @@ class App:
             "large": pygame.font.SysFont(None, 38),
         }
 
+        self.fonts["chat"] = pygame.font.SysFont(
+            "consolas",
+            18
+        )
+
         self.network = NetworkClient()
         self.session = Session()
 

@@ -76,6 +76,7 @@ class Lobby:
         self.options = GameOptions()
         self.spiritualist_id = None
         self.started = False
+        self.chat_messages = []
         host_player.lobby_id = self.lobby_id
 
     @property
@@ -127,6 +128,7 @@ class Lobby:
             "spiritualist_id": self.spiritualist_id,
             "can_start": self.can_start(),
             "started": self.started,
+            "chat_messages": self.chat_messages,
         }
 
     def to_summary_dict(self):

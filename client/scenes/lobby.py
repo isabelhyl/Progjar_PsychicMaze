@@ -23,8 +23,15 @@ import pygame
 from shared import protocol
 from shared.constants import WINDOW_WIDTH, WINDOW_HEIGHT
 from client.scenes.base import Scene
-from client.widgets import Button, COLOR_BG, COLOR_TEXT, COLOR_MUTED, COLOR_PANEL, COLOR_BORDER
-
+from client.widgets import (
+    Button,
+    ChatPanel,
+    COLOR_BG,
+    COLOR_TEXT,
+    COLOR_MUTED,
+    COLOR_PANEL,
+    COLOR_BORDER
+)
 
 class LobbyScene(Scene):
     def on_enter(self, **kwargs):
@@ -36,6 +43,24 @@ class LobbyScene(Scene):
 
         self.spiritualist_buttons = []  # list of (player_id, Button), manual mode only
         self.status_message = ""
+        self.chat_open = False
+        self.chat_button = Button(
+            (WINDOW_WIDTH - 120, 20, 100, 40),
+            "Chat",
+            self.app.fonts["small"]
+        )
+
+        self.chat_panel = ChatPanel(
+            (
+                WINDOW_WIDTH // 2,
+                0,
+                WINDOW_WIDTH // 2,
+                WINDOW_HEIGHT
+            ),
+            self.app.fonts["chat"],
+            self.app.session.chat_messages
+        )
+
         self._layout_dirty = True
 
     def _is_host(self):
@@ -46,6 +71,22 @@ class LobbyScene(Scene):
 
     def handle_event(self, event):
         lobby = self._lobby()
+
+        if self.chat_button.handle_event(event):
+            self.chat_open = not self.chat_open
+
+        if self.chat_open:
+            action, payload = self.chat_panel.handle_event(event)
+            if action == "close":
+                self.chat_open = False
+            if action == "send":
+                self.app.network.send(
+                    protocol.CHAT_MESSAGE,
+                    {
+                        "text": payload
+                    }
+                )
+
         if not lobby:
             return
 
@@ -66,10 +107,23 @@ class LobbyScene(Scene):
             if self.exit_button.handle_event(event):
                 self.app.network.send(protocol.EXIT_LOBBY)
                 self.app.session.reset_lobby()
+                self.app.session.chat_messages.clear() # clear chat history
                 self.app.set_scene("main_menu")
 
     def handle_message(self, msg_type, data):
-        if msg_type == protocol.LOBBY_STATE:
+        if msg_type == protocol.CHAT_MESSAGE:
+            msg = f"{data['sender']}: {data['text']}"
+            self.app.session.chat_messages.append(msg)
+        
+        elif msg_type == protocol.CHAT_HISTORY:
+            self.app.session.chat_messages.clear()
+            for msg in data.get("messages", []):
+
+                self.app.session.chat_messages.append(
+                    f"{msg['sender']}: {msg['text']}"
+                )
+
+        elif msg_type == protocol.LOBBY_STATE:
             self._layout_dirty = True
         elif msg_type == protocol.GAME_STARTING:
             # Transition is handled centrally in app.py's message pump;
@@ -88,10 +142,28 @@ class LobbyScene(Scene):
 
         bottom_y = WINDOW_HEIGHT - 70
         if is_host:
-            self.start_button.rect.update(WINDOW_WIDTH // 2 - 170, bottom_y, 160, 44)
-            self.end_button.rect.update(WINDOW_WIDTH // 2 + 20, bottom_y + 2, 140, 40)
+            # self.start_button.rect.update(WINDOW_WIDTH // 2 - 170, bottom_y, 160, 44)
+            # self.end_button.rect.update(WINDOW_WIDTH // 2 + 20, bottom_y + 2, 140, 40)
+            self.start_button.rect.update(
+                WINDOW_WIDTH // 2 - 260,
+                bottom_y,
+                160,
+                44
+            )
+            self.end_button.rect.update(
+                WINDOW_WIDTH // 2 - 80,
+                bottom_y + 2,
+                140,
+                40
+            )
         else:
-            self.exit_button.rect.update(WINDOW_WIDTH // 2 - 70, bottom_y, 140, 40)
+            # self.exit_button.rect.update(WINDOW_WIDTH // 2 - 70, bottom_y, 140, 40)
+            self.exit_button.rect.update(
+                WINDOW_WIDTH // 2 - 260,
+                bottom_y,
+                160,
+                44
+            )
 
         self.spiritualist_buttons = []
         if is_host and lobby.get("options", {}).get("spiritualist_mode") == "manual":
@@ -183,3 +255,10 @@ class LobbyScene(Scene):
         if self.status_message:
             status_surf = font_small.render(self.status_message, True, COLOR_MUTED)
             surface.blit(status_surf, (WINDOW_WIDTH // 2 - status_surf.get_width() // 2, panel_rect.bottom + 40))
+
+        # for the chat panel
+        self.chat_button.draw(surface)
+
+        if self.chat_open:
+            self.chat_panel.draw(surface)
+        
