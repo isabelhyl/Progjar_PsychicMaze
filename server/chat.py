@@ -51,6 +51,7 @@ if __name__ == "__main__":
     
     # Connect to your local area network
     # Use ipconfig in PowerShell and find the IPv4 address
+    # The IP Address of the apartment's router is 192.168.1.12
     chat = NetworkChat('192.168.0.242', 5555)
     
     if chat.connect():
